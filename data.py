@@ -2,18 +2,20 @@ import re
 import io
 import time
 import json
+import nltk
 import string
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import tensorflow as tf
-from base64 import encode
-from textblob import TextBlob
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
 class Dataset:
     def __init__(self, data_path, vocab_size = 10000, max_length = 120):
         self.data_path = data_path
@@ -21,7 +23,7 @@ class Dataset:
         self.max_length = max_length
         self.embedding_dim = 16
         self.trunc_type = 'post'
-        self.oov_tok = "<OOV>"
+        self.oov_tok = '<OOV>'
         self.tokenizer_save = None
 
     def load_dataset(self):
@@ -60,7 +62,6 @@ class Dataset:
             texts[i] = self.remove_url(texts[i])
             texts[i] = self.remove_emoji(texts[i])
             texts[i] = self.remove_punctuation(texts[i])
-            texts[i] = self.convert_incorrect_text(texts[i])
             texts[i] = self.remove_stopwords(texts[i])
             texts[i] = self.lemma_traincorpus(texts[i])
         return np.array(texts)
@@ -85,10 +86,6 @@ class Dataset:
         for char in exclude:
             text = text.replace(char,'')
         return text
-
-    def convert_incorrect_text(self, text):
-        correct = TextBlob(text)
-        return correct.correct().string
     
     def remove_emoji(self, text):
         emoji_pattern = re.compile("["
