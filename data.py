@@ -1,21 +1,28 @@
-import re, io, os
+import io
+import json
+import nltk
+import re
+import string
+
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-from constant import *
 import tensorflow as tf
 from nltk import word_tokenize
-import time, json, nltk, string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tqdm import tqdm
+
+from constant import *
 
 nltk.download('stopwords')
 nltk.download('wordnet')
-nltk.download('punkt')
-nltk.download('omw-1.4')
+#nltk.download('punkt')
+#nltk.download('omw-1.4')
+
+
 class Dataset:
     def __init__(self, data_path):
         self.data_path = data_path
@@ -49,7 +56,7 @@ class Dataset:
         for char in exclude:
             text = text.replace(char,'')
         return text
-    
+
     def remove_emoji(self, text):
         """Remove emoji from a text"""
         emoji_pattern = re.compile("["
@@ -64,14 +71,15 @@ class Dataset:
 
     def remove_stopwords(self, text):
         """Remove stopwords from a text"""
-        stop_words = set(stopwords.words('english'))
+        stop_words=set(stopwords.words('english'))
         words = text.split()
         list_words = []
         for word in words:
             if word not in stop_words:
                 list_words.append(word)
         return ' '.join(list_words)
-    
+
+    #grouping together the different inflected forms of a word
     def lemma_traincorpus(self, data):
         """Lemmatize the training corpus"""
         lemmatizer=WordNetLemmatizer()
@@ -86,29 +94,28 @@ class Dataset:
         self.tokenizer_save = tokenizer
         # Generate and pad the training sequences
         sequences = tokenizer.texts_to_sequences(sentences)
-        padded = pad_sequences(sequences,maxlen=max_length, truncating=TRUNC_TYPE, padding=PADDING)
+        padded = pad_sequences(sequences, maxlen=max_length, truncating=TRUNC_TYPE, padding=PADDING)
         return padded
 
     def save_clean_data(self, sentences, list_labels, input, label):
         """Save clean data to a file"""
         # list_sentences = [' '.join(sentence) for sentence in sentences]
-        output = pd.DataFrame({input: sentences,
-                        label: list_labels})
-        output.to_csv('clean_data.csv', index=False)
+        output = pd.DataFrame({input: sentences,label: list_labels})
+        output.to_csv('./data/clean/clean_data.csv', index=False)
         print("Clean data saved.")
 
     def save_tokenizer(self, tokenizer):
         """Save tokenizer to a file"""
         tokenizer_json = tokenizer.to_json()
-        with io.open('tokenizer.json', 'w', encoding='utf-8') as f:
+        with io.open('./data/tokenizer.json', 'w', encoding='utf-8') as f:
             f.write(json.dumps(tokenizer_json, ensure_ascii=False))
         print("Tokenizer saved.")
 
     def save_labels(self, data):
         """Save labels to a file"""
         dt_unique = data.unique()
-        self.labels_data = dict(zip(dt_unique,[i for i in range(len(dt_unique))]))
-        with open('label.json', 'w') as f:
+        self.labels_data = dict(zip(dt_unique, [i for i in range(len(dt_unique))]))
+        with open('./data/label.json', 'w') as f:
             json.dump(self.labels_data, f)
         print("Labels saved.")
 
@@ -123,7 +130,7 @@ class Dataset:
             texts[i] = self.remove_stopwords(texts[i])
             texts[i] = self.lemma_traincorpus(texts[i])
         return np.array(texts)
-    
+
     def load_dataset(self, max_length, vocab_size, input_name, label_name):
         """Load and preprosess the dataset"""
         # Load, clean the dataset
@@ -136,21 +143,22 @@ class Dataset:
         # Save data after preprocessing
         self.save_clean_data(sentences, labels, input_name, label_name)
         self.save_labels(data[label_name])
-        sentences = self.tokenizer_data(sentences, vocab_size, max_length)
+        padded_sentences = self.tokenizer_data(sentences, vocab_size, max_length)
         self.save_tokenizer(self.tokenizer_save)
         print("Dataset loaded.")
-        return sentences, labels
+        return padded_sentences, labels
 
-    def build_dataset(self,max_length=128, vocab_size=10000, test_size=.2, buffer_size=128, batch_size=128, input_name='review', label_name='sentiment'):
+    def build_dataset(self, max_length=MAX_LENGTH, vocab_size=VOCAB_SIZE, test_size=TEST_SIZE, buffer_size=128,
+                      batch_size=128, input_name=INPUT_NAME, label_name=LABEL_NAME):
         """Build the dataset"""
-        sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name)
-        X_train, X_val, y_train, y_val = self.split_data(sentences, labels, test_size)
+        padded_sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name)
+        X_train, X_val, y_train, y_val = self.split_data(padded_sentences, labels, test_size)
 
         train_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_train, dtype=tf.int64),
-                        tf.convert_to_tensor(y_train, dtype=tf.int64)))
+                                                            tf.convert_to_tensor(y_train, dtype=tf.int64)))
         train_dataset = train_dataset.shuffle(buffer_size).batch(batch_size)
 
-        val_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_val, dtype=tf.int64), 
-                      tf.convert_to_tensor(y_val, dtype=tf.int64)))
+        val_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_val, dtype=tf.int64),
+                                                          tf.convert_to_tensor(y_val, dtype=tf.int64)))
         val_dataset = val_dataset.shuffle(buffer_size).batch(batch_size)
         return train_dataset, val_dataset
