@@ -122,7 +122,7 @@ class Dataset:
     def clean_data(self, texts):
         """Clean the data by removing html tags, url, 
         punctuation, stopwords, emoji, lemmatize"""
-        texts.str.lower().str.strip()
+        texts = texts.str.lower().str.strip()
         for i in tqdm(range(len(texts))):
             texts[i] = self.remove_html_tags(texts[i])
             texts[i] = self.remove_url(texts[i])
