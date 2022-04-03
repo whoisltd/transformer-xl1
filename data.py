@@ -122,6 +122,7 @@ class Dataset:
     def clean_data(self, texts):
         """Clean the data by removing html tags, url, 
         punctuation, stopwords, emoji, lemmatize"""
+        texts.str.lower().str.strip()
         for i in tqdm(range(len(texts))):
             texts[i] = self.remove_html_tags(texts[i])
             texts[i] = self.remove_url(texts[i])
@@ -137,7 +138,6 @@ class Dataset:
         print("Loading dataset...")
         data = pd.read_csv(self.data_path)
         data = data.dropna()
-        data[input_name] = data[input_name].str.lower().str.strip()
         labels = self.encode_labels(data[label_name])
         sentences = self.clean_data(data[input_name])
         # Save data after preprocessing
