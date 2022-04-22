@@ -23,7 +23,6 @@ numpy==1.19.5
 oauthlib==3.1.1
 opt-einsum==3.3.0
 pandas==1.4.1
-pkg_resources==0.0.0
 protobuf==3.17.3
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
