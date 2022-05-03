@@ -1,33 +1,31 @@
-from turtle import position
-from grpc import Channel
 import tensorflow as tf
-import numpy as np
 
-class PositionEmbedding(tf.keras.layers.Layer):
+class PositionEmbedding():
     """
     Transformer XL Position Embedding Layer
     """
 
-    def __init__(self, d_model, pos_seq, clamp_len, **kwargs):
-        super(PositionEmbedding, self).__init__(**kwargs)
-        self.d_model = d_model
-        self.pos_seq = pos_seq
-        self.clamp_len = clamp_len
-    def call(self, pos, **kwargs):
+    def __init__(self):
+        super(PositionEmbedding, self).__init__()
+
+    def __call__(self, d_model, k_len):
         """
         Args:
             d_model: dimension of embedding
             pos_seq: (batch_size, seq_len, d_model)
-            clamp_len: max length of position sequence
         Returns:
             (batch_size, seq_len, d_model)
         """
-        inv_freq = 1 / (10000 ** (tf.range(0, self.d_model, 2.0) / self.d_model))
-        if self.clamp_len >0:
-            self.pos_seq = tf.minimum(self.pos_seq, self.clamp_len)
-        positions = tf.tensordot(pos, inv_freq, axes=0)
-        pos_emb = tf.concat([tf.sin(pos_emb), tf.cos(pos_emb)], -1)
-        pos_emb = tf.cast(pos_emb, tf.float32)
-        return pos_emb
+        inv_freq = 1 / (10000 ** (tf.range(0, d_model, 2.0) / d_model))
+        pos_seq = tf.range(k_len - 1, -1, -1.0)
+        positions = tf.tensordot(pos_seq, inv_freq, axes=0)
+        sinusoid_inp = tf.concat([tf.sin(positions), tf.cos(positions)], -1)
+        pos_emb = tf.cast(sinusoid_inp, tf.float32)
+
+        return pos_emb[None, :, :]
         
-        
+if __name__ == '__main__':
+    d_model = 128
+    k_len = 32+16
+    pos_emb = PositionEmbedding()
+    pos_emb = pos_emb(d_model, k_len)
