@@ -89,8 +89,9 @@ if __name__ == '__main__':
                                     dropout_rate=dropout_rate,
                                     untie_rel_bias=True)
     inputs = tf.reshape(tf.range(batch_size * q_len), shape=(batch_size, q_len))
+    # print(inputs)
     output1, mems1 = mem_transformer(inputs, training=False)
-    mem_transformer.mems = mems1
-    output2, mems2 = mem_transformer(inputs, training=False)
+    # mem_transformer. = mems1
+    output2, mems2 = mem_transformer(inputs, mems1, training=False)
     print(output1[0][0])
     print(output2[0][0])
