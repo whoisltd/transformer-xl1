@@ -24,9 +24,9 @@ class Transformer(tf.keras.layers.Layer):
         attn_out = self.dropout1(attn_out, training=training)
         out1 = self.layer_norm1(inputs + attn_out)
 
-        ffn_out = self.pos_ffn(out1)
+        ffn_out = self.pos_ffn(out1, training = training)
         ffn_out = self.dropout2(ffn_out, training=training)
-        out2 = self.layer_norm2(out1 + inputs)
+        out2 = self.layer_norm2(out1 + ffn_out)
 
         return out2
         # 8.82292632e-04  5.70151024e-05  3.64560820e-02  2.05970183e-02]
