@@ -6,8 +6,8 @@ import tensorflow as tf
 from data import Dataset
 from tranformers_xl import *
 from data import *
-vocab_size = 10000  # Only consider the top 20k words
-maxlen = 200  # Only consider the first 200 words of each movie review
+vocab_size = 1000  # Only consider the top 20k words
+maxlen = 16  # Only consider the first 200 words of each movie review
 
 # def load_dataset():
 #     (x_train, y_train), (x_val, y_val) = tf.keras.datasets.imdb.load_data(num_words=vocab_size)
@@ -18,19 +18,19 @@ maxlen = 200  # Only consider the first 200 words of each movie review
 # x_train = tf.keras.preprocessing.sequence.pad_sequences(train_set[0], maxlen=maxlen)
 # x_val = tf.keras.preprocessing.sequence.pad_sequences(val_set[0], maxlen=maxlen)
 # word embeeding size
-EMBEDDING_SIZE = 410
+EMBEDDING_SIZE = 128
 # multihead attetion hidden size
-HIDDEN_SIZE = 410
+HIDDEN_SIZE = 128
 # feed forward network hidden size
-FFN_SIZE = 2100
+FFN_SIZE = 512
 # number of heads of multiheads
-NUM_HEADS = 10
+NUM_HEADS = 8
 # target length, or sequence length
-SEQ_LEN = 50
+SEQ_LEN = 16
 # memory length
-MEM_LEN = 50
+MEM_LEN = 32
 # number of layers of multihead attention
-N_LAYER = 16
+N_LAYER = 6
 DROPOUT_RATE = 0.1
 # wheather the bias of each layer of relative multihead attention is different or not
 UNTIE_REL_BIAS = True
@@ -101,7 +101,7 @@ def train_step(inputs, labels, optimizer, inputs_mem):
     with tf.GradientTape() as tape:
         logits, new_mems = model(inputs, inputs_mem, training=True)
         loss = loss_function(labels, logits)
-    
+
     #compute gradients
     gradients = tape.gradient(loss, model.trainable_variables)
 
@@ -127,4 +127,4 @@ def fit():
             checkpoint.save(file_prefix = checkpoint_manager.save_path)
             print('Saved checkpoint for epoch {}'.format(epoch + 1))
 
-fit()
+fit()   

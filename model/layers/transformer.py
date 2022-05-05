@@ -9,7 +9,7 @@ class Transformer(tf.keras.layers.Layer):
         self.rel_multi_head_attention = RelativeMultiHeadAttention(d_model, num_heads, dropout_rate)
 
         #feed forward network
-        self.pos_ffn = ffn(d_model, d_ff)
+        self.pos_ffn = ffn(d_ff = d_ff, d_model= d_model)
 
         #layer norm
         self.layer_norm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
@@ -24,7 +24,7 @@ class Transformer(tf.keras.layers.Layer):
         attn_out = self.dropout1(attn_out, training=training)
         out1 = self.layer_norm1(inputs + attn_out)
 
-        ffn_out = self.pos_ffn(out1, training = training)
+        ffn_out = self.pos_ffn(out1, training = training) 
         ffn_out = self.dropout2(ffn_out, training=training)
         out2 = self.layer_norm2(out1 + ffn_out)
 

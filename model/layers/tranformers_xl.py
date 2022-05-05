@@ -92,6 +92,8 @@ if __name__ == '__main__':
     # print(inputs)
     output1, mems1 = mem_transformer(inputs, training=False)
     # mem_transformer. = mems1
-    output2, mems2 = mem_transformer(inputs, mems1, training=False)
-    print(output1[0][0])
-    print(output2[0][0])
+    output2, mems2 = mem_transformer(inputs, training=False)
+    print(output1[0][0].shape)
+    # print(output2[0][0])
+    # print(output1)
+    # print(mems1)

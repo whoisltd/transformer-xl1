@@ -152,8 +152,8 @@ class Dataset:
         print("Dataset loaded.")
         return padded_sentences, labels
 
-    def build_dataset(self, max_length=MAX_LENGTH, vocab_size=VOCAB_SIZE, test_size=TEST_SIZE, buffer_size=128,
-                      batch_size=128, input_name=INPUT_NAME, label_name=LABEL_NAME, cleaned_data=False):
+    def build_dataset(self, max_length=MAX_LENGTH, vocab_size=VOCAB_SIZE, test_size=TEST_SIZE, buffer_size=8,
+                      batch_size=8, input_name=INPUT_NAME, label_name=LABEL_NAME, cleaned_data=False):
         """Build the dataset"""
         padded_sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name, cleaned_data)
         X_train, X_val, y_train, y_val = self.split_data(padded_sentences, labels, test_size)

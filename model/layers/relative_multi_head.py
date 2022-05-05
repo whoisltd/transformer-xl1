@@ -33,8 +33,10 @@ class RelativeMultiHeadAttention(tf.keras.layers.Layer):
             initializer="glorot_normal"
         )
 
-    def call(self, inputs, inputs_mem, r, mask, training):
+    def call(self, inputs, inputs_mem, r, training):
         # q, k, v, r = inputs
+        print(r.shape)
+        print(inputs.shape)
         batch_size = tf.shape(inputs)[0]
         q_len = tf.shape(inputs)[1]
 

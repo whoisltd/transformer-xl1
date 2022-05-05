@@ -3,8 +3,8 @@
 LABEL_NAME = 'sentiment'
 INPUT_NAME = 'review'
 TEST_SIZE = 0.2
-VOCAB_SIZE = 10000
-MAX_LENGTH = 1000
+VOCAB_SIZE = 1000
+MAX_LENGTH = 16
 TRUNC_TYPE = 'post'
 PADDING = 'post'
 OOV = '<OOV>'
