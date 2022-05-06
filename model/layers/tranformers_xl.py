@@ -56,7 +56,7 @@ class TransformerXL(tf.keras.Model):
 
         for i in range(self.n_layer):
             new_mems.append(self.cache_mems(x, inputs_mem[i]))
-            j = i if self.untie_rel_bias else None
+            j = i if self.untie_rel_bias else 0
             x = self.multihead_layers[i](inputs=x, 
                                         inputs_mem=inputs_mem[i], 
                                         r=self.pos_embedding,
