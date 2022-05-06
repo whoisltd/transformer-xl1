@@ -32,7 +32,7 @@ class TransformerXL(tf.keras.Model):
 
         #positional embedding
         k_len = q_len + m_len
-        self.pos_embedding = PositionEmbedding()(d_model, k_len)
+        self.pos_embedding = PositionEmbedding(d_model, k_len)
         self.logit_bias = tf.Variable(tf.zeros((n_vocab,)), name='logit_bias')
         #transformer
         self.multihead_layers = [Transformer(d_model, d_ff, num_heads, dropout_rate) for _ in range(n_layer)]
@@ -56,16 +56,16 @@ class TransformerXL(tf.keras.Model):
 
         for i in range(self.n_layer):
             new_mems.append(self.cache_mems(x, inputs_mem[i]))
-            j = i if self.untie_rel_bias else 0
+            j = i if self.untie_rel_bias else None
             x = self.multihead_layers[i](inputs=x, 
                                         inputs_mem=inputs_mem[i], 
                                         r=self.pos_embedding,
                                         training=training)
             x=self.dropout1(x, training=training)
-            x = tf.matmul(x, self.projection, transpose_b=True)
-            x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
+        x = tf.matmul(x, self.projection, transpose_b=True)
+        x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
 
-            return x, new_mems
+        return x, new_mems
 
 if __name__ == '__main__':
     n_vocab = 1000
@@ -93,7 +93,4 @@ if __name__ == '__main__':
     output1, mems1 = mem_transformer(inputs, training=False)
     # mem_transformer. = mems1
     output2, mems2 = mem_transformer(inputs, training=False)
-    print(output1[0][0].shape)
-    # print(output2[0][0])
-    # print(output1)
-    # print(mems1)
+    print(mem_transformer.trainable_variables)
