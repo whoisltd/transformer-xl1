@@ -11,7 +11,7 @@ def PositionEmbedding(d_model, k_len):
     inv_freq = 1 / (10000 ** (tf.range(0, d_model, 2.0) / d_model))
     pos_seq = tf.range(k_len - 1, -1, -1.0)
     positions = tf.tensordot(pos_seq, inv_freq, axes=0)
-    sinusoid_inp = tf.concat([tf.sin(positions), tf.cos(positions)], -1)
+    sinusoid_inp = tf.concat((tf.sin(positions), tf.cos(positions)), -1)
     pos_emb = tf.cast(sinusoid_inp, tf.float32)
 
     return pos_emb[None, :, :]

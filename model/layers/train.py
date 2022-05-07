@@ -50,14 +50,17 @@ ff_dim = 32  # Hidden layer size in feed forward network inside transformer
 # model = TransformerXL(vocab_size, embed_dim, d_model=64, d_ff=ff_dim,
 
 def cal_acc(real, pred):
-		accuracies = tf.equal(real, tf.argmax(pred, axis=2))
+        pred_labels = pred.T.argmax(axis = 1)
+        acc = np.sum(np.equal(pred_labels, real))/len(real)
 
-		mask = tf.math.logical_not(real == 0)
-		accuracies = tf.math.logical_and(mask, accuracies)
+		# accuracies = tf.equal(real, tf.argmax(pred, axis=2))
 
-		accuracies = tf.cast(accuracies, dtype=tf.float32)
-		mask = tf.cast(mask, dtype=tf.float32)
-		return tf.reduce_sum(accuracies) / tf.reduce_sum(mask)
+		# mask = tf.math.logical_not(real == 0)
+		# accuracies = tf.math.logical_and(mask, accuracies)
+
+		# accuracies = tf.cast(accuracies, dtype=tf.float32)
+		# mask = tf.cast(mask, dtype=tf.float32)
+		return acc
 
 class CustomLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps = 4000):
