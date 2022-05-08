@@ -83,7 +83,7 @@ class RelativeMultiHeadAttention(tf.keras.layers.Layer):
         bd = tf.einsum('bqnd,knd->bnqk', heads_q + self.v, r)
         bd = relative_shift(bd)
 
-        score = (ac + bd) / (self.d_k**0.5))
+        score = (ac + bd) / (self.d_k**0.5)
         # scores = tf.matmul(q, k, transpose_b=True) / tf.sqrt(d_k)
 
         attn_mask = create_mask(q_len, k_len-q_len) # attn_mask: shape=(m_len + q_len, q_len)
