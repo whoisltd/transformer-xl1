@@ -1,13 +1,7 @@
 import tensorflow as tf
 
-def PositionEmbedding(d_model, k_len):
-    """
-    Args:
-        d_model: dimension of embedding
-        pos_seq: (batch_size, seq_len, d_model)
-    Returns:
-        (batch_size, seq_len, d_model)
-    """
+def position_embedding(d_model, k_len):
+    # 
     inv_freq = 1 / (10000 ** (tf.range(0, d_model, 2.0) / d_model))
     pos_seq = tf.range(k_len - 1, -1, -1.0)
     positions = tf.tensordot(pos_seq, inv_freq, axes=0)

@@ -13,7 +13,7 @@ class TransformerXL(tf.keras.Model):
 
     def __init__(self, n_vocab, d_embed, d_model, 
                 d_ff, q_len, m_len, num_heads,
-                n_layer, dropout_rate, untie_rel_bias):
+                n_layer, dropout_rate):
         super(TransformerXL, self).__init__()
         self.d_embed = d_embed
         self.d_model = d_model
@@ -21,19 +21,13 @@ class TransformerXL(tf.keras.Model):
         self.q_len = q_len
         self.m_len = m_len
         self.n_layer = n_layer
-        self.untie_rel_bias = untie_rel_bias
-        INITIALIZER = tf.keras.initializers.RandomNormal(stddev=0.01)
         #word embedding
-        self.embedding = tf.Variable(INITIALIZER((n_vocab, d_embed)), name='embedding')
-
-        #word embedding size to model size
-        self.projection = tf.Variable(INITIALIZER((d_embed, d_model)), name='projection')
+        self.embedding = Embedding(n_vocab, d_model)
         self.dropout1 = Dropout(dropout_rate)
 
         #positional embedding
         k_len = q_len + m_len
-        self.pos_embedding = PositionEmbedding()(d_model, k_len)
-        self.logit_bias = tf.Variable(tf.zeros((n_vocab,)), name='logit_bias')
+        self.pos_embedding = position_embedding(d_model, k_len)
         #transformer
         self.multihead_layers = [Transformer(d_model, d_ff, num_heads, dropout_rate) for _ in range(n_layer)]
 
@@ -48,22 +42,18 @@ class TransformerXL(tf.keras.Model):
     
     def call(self, inputs, inputs_mem=None, training = False):
         new_mems = []
-        x = tf.nn.embedding_lookup(self.embedding, inputs)
-        x = tf.matmul(x, self.projection)
+        x = self.embedding(inputs)
 
         if inputs_mem is None:
             inputs_mem = [None] * self.n_layer
 
         for i in range(self.n_layer):
             new_mems.append(self.cache_mems(x, inputs_mem[i]))
-            # j = i if self.untie_rel_bias else None
             x = self.multihead_layers[i](inputs=x, 
                                         inputs_mem=inputs_mem[i], 
                                         r=self.pos_embedding,
                                         training=training)
-            x=self.dropout1(x, training=training)
-        x = tf.matmul(x, self.projection, transpose_b=True)
-        x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
+        x=self.dropout1(x, training=training)
 
         return x, new_mems
 
