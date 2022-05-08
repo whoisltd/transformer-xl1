@@ -60,8 +60,7 @@ model = TransformerXL(n_vocab=sentences_tokenizer_size,
                         m_len=MEM_LEN,
                         num_heads=NUM_HEADS,
                         n_layer=N_LAYER,
-                        dropout_rate=0.1,
-                        untie_rel_bias=True)
+                        dropout_rate=0.1)
 
 learning_rate = CustomLearningRate(d_model)
 optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9)

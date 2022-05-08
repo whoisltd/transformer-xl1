@@ -76,8 +76,7 @@ if __name__ == '__main__':
                                     m_len=m_len,
                                     num_heads=num_heads,
                                     n_layer=n_layer,
-                                    dropout_rate=dropout_rate,
-                                    untie_rel_bias=True)
+                                    dropout_rate=dropout_rate)
     inputs = tf.reshape(tf.range(batch_size * q_len), shape=(batch_size, q_len))
     # print(inputs)
     output1, mems1 = mem_transformer(inputs, training=False)
