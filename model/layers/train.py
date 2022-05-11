@@ -1,3 +1,4 @@
+import time
 import tensorflow as tf
 from data import Dataset
 import numpy as np
@@ -92,31 +93,43 @@ def train_step(inputs, labels, optimizer, inputs_mem):
         logits = tf.keras.layers.Dense(2, activation="softmax")(x)
         loss = loss_function(labels1, logits)
         
-#compute gradients
+    #compute gradients
     gradients = tape.gradient(loss, model.trainable_variables)
 
     #update weights
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss.update_state(loss)
     train_accuracy.update_state(cal_acc(labels, logits))
-    return loss, new_mems, logits
+
+    return new_mems
     
 def fit():
     if checkpoint_manager.latest_checkpoint:
         checkpoint.restore(checkpoint_manager.latest_checkpoint)
         print("Latest checkpoint restored!!")
+
     mems=None
+
     for epoch in range(epochs):
-        train_loss.reset_states()
-        train_accuracy.reset_states()
+
+        print("\nStart of epoch %d" % (epoch,))
+
+        start_time = time.time()
+
         for (batch, (inputs, labels)) in enumerate(train_dataset):
-            loss, mems, logits = train_step(inputs, labels, optimizer, mems)
-            train_loss(loss)
-            # train_accuracy(labels, logits)
-            if batch % 100 == 0:
-                print('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1, batch, train_loss.result(), train_accuracy.result()))
-        # if (epoch + 1) % 1 == 0:
-        #     checkpoint.save(file_prefix = checkpoint_manager.save_path)
-        #     print('Saved checkpoint for epoch {}'.format(epoch + 1))
+
+            mems = train_step(inputs, labels, optimizer, mems)
+
+            if batch % 200 == 0:
+                print('batch {} Loss {:.4f}'.format(batch, train_loss.result()))
+        
+        if (epoch + 1) % 5 == 0:
+            saved_path = checkpoint_manager.save()
+            print('Checkpoint was saved at {}'.format(saved_path))
+
+        train_loss.reset_states()
+        train_acc = train_accuracy.result()
+    
+    print('----------------Done--------------------')
 
 fit()   
