@@ -68,7 +68,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, eps
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 train_accuracy = tf.keras.metrics.Mean(name='train_accuracy')
 checkpoint = tf.train.Checkpoint(model=model, optimizer = optimizer)
-checkpoint_manager = tf.train.CheckpointManager(checkpoint, './checkpoints', max_to_keep=3)
+checkpoint_manager = tf.train.CheckpointManager(checkpoint, '/content', max_to_keep=3)
 
 def loss_function(labels, logits):
     """
@@ -78,7 +78,8 @@ def loss_function(labels, logits):
         labels, logits, from_logits=True)
     loss = tf.reduce_mean(loss)
     return loss
-            
+
+@tf.function  
 def train_step(inputs, labels, optimizer, inputs_mem):
     with tf.GradientTape() as tape:
         # print(labels.shape)
@@ -111,25 +112,26 @@ def fit():
     mems=None
 
     for epoch in range(epochs):
-
-        print("\nStart of epoch %d" % (epoch,))
-
-        start_time = time.time()
-
-        for (batch, (inputs, labels)) in enumerate(train_dataset):
+        old_time = time.time()
+        for (step, (inputs, labels)) in enumerate(train_dataset):
 
             mems = train_step(inputs, labels, optimizer, mems)
 
-            if batch % 200 == 0:
-                print('batch {} Loss {:.4f}'.format(batch, train_loss.result()))
-        
-        if (epoch + 1) % 5 == 0:
-            saved_path = checkpoint_manager.save()
-            print('Checkpoint was saved at {}'.format(saved_path))
+        print('{} epoch: {} | loss: {:.4f} | acc: {:.4f} | {:.2f} step/s'.format(
+                    time.strftime("%Y-%m-%d %H:%M:%S"),
+                    epoch,
+                    train_loss.result(),
+                    train_accuracy.result(),
+                    100 / (time.time() - old_time)))
 
+        # old_time = time.time()
+        if epoch+1 % 5 == 0:
+            print('saving checkpoint for epoch {} at {}'.format(
+                    epoch+1, checkpoint_manager.save()))
         train_loss.reset_states()
-        train_acc = train_accuracy.result()
-    
+
+        train_accuracy.reset_states()
+        
     print('----------------Done--------------------')
 
 fit()   
