@@ -34,6 +34,8 @@ class TransformerXL(tf.keras.Model):
         #positional embedding
         k_len = q_len + m_len
         self.pos_embedding = position_embedding(d_model, k_len)
+        self.logit_bias = tf.Variable(tf.zeros((n_vocab,)), name='logit_bias')
+
         #transformer
         self.multihead_layers = [Transformer(d_model, d_ff, num_heads, dropout_rate) for _ in range(n_layer)]
 
