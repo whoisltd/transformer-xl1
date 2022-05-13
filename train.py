@@ -11,7 +11,6 @@ if __name__ == "__main__":
     
     # FIXME
     # Arguments users used when running command lines
-    parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--epochs", default=1000, type=int)
     parser.add_argument("--dropout", default=0.1, type=float)
     parser.add_argument("--num-heads", default=8, type=int)
