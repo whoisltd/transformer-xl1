@@ -3,8 +3,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LayerNormalization
 from tensorflow.keras.layers import Embedding
-from positional_embedding import *
-from transformer import *
+from model.layers.positional_embedding import *
+from model.layers.transformer import *
 
 class TransformerXL(tf.keras.Model):
     """

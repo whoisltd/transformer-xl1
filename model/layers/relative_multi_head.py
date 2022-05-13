@@ -1,8 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.keras.layers import Dropout, Dense
-from rel_shift import *
-from generate_mask import *
-import numpy as np
+from model.layers.rel_shift import *
+from model.layers.generate_mask import *
 
 class RelativeMultiHeadAttention(tf.keras.layers.Layer):
     """
@@ -77,7 +76,7 @@ class RelativeMultiHeadAttention(tf.keras.layers.Layer):
         return output
     
     def scaled_dot_product_attention(self, heads_q, heads_k, heads_v, r, q_len, k_len):
-
+        #r = position_embedding
         ac = tf.einsum('bqnd,bknd->bnqk', heads_q + self.u, heads_k)
         
         bd = tf.einsum('bqnd,knd->bnqk', heads_q + self.v, r)
