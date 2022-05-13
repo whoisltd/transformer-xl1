@@ -13,25 +13,19 @@ if __name__ == "__main__":
     # Arguments users used when running command lines
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--epochs", default=1000, type=int)
-    parser.add_argument("--lr", default=0.001, type=float)
     parser.add_argument("--dropout", default=0.1, type=float)
     parser.add_argument("--num-heads", default=8, type=int)
+    parser.add_argument("--d-model", default=128, type=int)
+    parser.add_argument("--embedding-size", default=128, type=int)
     parser.add_argument("--d-model", default=128, type=int)
     parser.add_argument("--d-ff", default=512, type=int)
     parser.add_argument("--n-layer", default=6, type=int)
     parser.add_argument("--max-len", default=128, type=int)
     parser.add_argument("--vocab-size", default=10000, type=int)
-    parser.add_argument("--embedding-size", default=128, type=int)
     parser.add_argument("--buffer-size", default=128, type=int)
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--test-size", default=0.2, type=float)
-    parser.add_argument("--data-path", default="/content/Transformer-XL/data/clean/clean_data.csv", type=str)
-    # parser.add_argument("--train-file", default="data/train.txt", type=str)
-    # parser.add_argument("--test-file", default="data/test.txt", type=str)
-    parser.add_argument("--checkpoint-dir", default="checkpoint", type=str)
-    # parser.add_argument("--model-name", default="model", type=str)
-    # parser.add_argument("--mode", default="train", type=str)
-    # parser.add_argument("--sentence", default="", type=str)
+    parser.add_argument("--data-path", default="/content/transformer-xl1/data/clean/clean_data.csv", type=str)
 
     args = parser.parse_args()
 
@@ -108,7 +102,6 @@ checkpoint_manager = tf.train.CheckpointManager(checkpoint, '/content', max_to_k
 #     # loss = tf.reduce_mean(loss)
 #     return loss
 
-@tf.function  
 def train_step(inputs, labels, optimizer, inputs_mem):
     with tf.GradientTape() as tape:
         # print(labels.shape)
@@ -117,9 +110,9 @@ def train_step(inputs, labels, optimizer, inputs_mem):
         logits, new_mems = model(inputs, inputs_mem, training=True)
         # print(logits.shape)
         x = tf.keras.layers.GlobalAveragePooling1D()(logits)
-        x = tf.keras.layers.Dropout(0.1)(x)
+        x = tf.keras.layers.Dropout(0.1)(x, training=True)
         x = tf.keras.layers.Dense(20, activation="relu")(x)
-        x = tf.keras.layers.Dropout(0.1)(x)
+        x = tf.keras.layers.Dropout(0.1)(x, training=True)
         logits = tf.keras.layers.Dense(2, activation="softmax")(x)
         # loss = loss_function(labels1, logits)
         loss = train_loss(labels1, logits)
