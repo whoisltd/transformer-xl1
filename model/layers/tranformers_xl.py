@@ -6,6 +6,8 @@ from tensorflow.keras.layers import Embedding
 from model.layers.positional_embedding import *
 from model.layers.transformer import *
 
+INITIALIZER = tf.keras.initializers.RandomNormal(stddev=0.01)
+
 class TransformerXL(tf.keras.Model):
     """
     Transformer XL model
@@ -22,7 +24,11 @@ class TransformerXL(tf.keras.Model):
         self.m_len = m_len
         self.n_layer = n_layer
         #word embedding
-        self.embedding = Embedding(n_vocab, d_model)
+        # self.embedding = Embedding(n_vocab, d_model)
+        self.embedding = tf.Variable(INITIALIZER((n_vocab, d_embed)), name='embedding')
+        # word embedding size to model size
+        self.projection = tf.Variable(INITIALIZER((d_embed, d_model)), name='projection')
+        
         self.dropout1 = Dropout(dropout_rate)
 
         #positional embedding
@@ -42,7 +48,9 @@ class TransformerXL(tf.keras.Model):
     
     def call(self, inputs, inputs_mem=None, training = False):
         new_mems = []
-        x = self.embedding(inputs)
+        x = tf.nn.embedding_lookup(self.embedding, inputs)
+        x = tf.matmul(x, self.projection)
+        # x = self.embedding(inputs)
 
         if inputs_mem is None:
             inputs_mem = [None] * self.n_layer
@@ -54,7 +62,8 @@ class TransformerXL(tf.keras.Model):
                                         r=self.pos_embedding,
                                         training=training)
         x=self.dropout1(x, training=training)
-
+        x = tf.matmul(x, self.projection, transpose_b=True)
+        x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
         return x, new_mems
 
 if __name__ == '__main__':
