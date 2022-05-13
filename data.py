@@ -1,3 +1,4 @@
+#%%
 import io
 import json
 import nltk
@@ -132,28 +133,31 @@ class Dataset:
             texts[i] = self.lemma_traincorpus(texts[i])
         return np.array(texts)
 
-    def load_dataset(self, max_length, vocab_size, input_name, label_name):
+    def load_dataset(self, max_length, vocab_size, input_name, label_name, cleaned_data):
         """Load and preprosess the dataset"""
         # Load, clean the dataset
         print("Loading dataset...")
         data = pd.read_csv(self.data_path)
         data = data.dropna()
         labels = self.encode_labels(data[label_name])
-        sentences = self.clean_data(data[input_name])
-        # Save data after preprocessing
-        self.save_clean_data(sentences, labels, input_name, label_name)
-        self.save_labels(data[label_name])
+        if cleaned_data:
+            sentences = np.array(data[input_name])
+        else:
+            sentences = self.clean_data(data[input_name])
+            # Save data after preprocessing
+            self.save_clean_data(sentences, labels, input_name, label_name)
+            self.save_labels(data[label_name])
         padded_sentences = self.tokenizer_data(sentences, vocab_size, max_length)
         self.save_tokenizer(self.tokenizer_save)
         print("Dataset loaded.")
         return padded_sentences, labels
 
     def build_dataset(self, max_length=MAX_LENGTH, vocab_size=VOCAB_SIZE, test_size=TEST_SIZE, buffer_size=128,
-                      batch_size=128, input_name=INPUT_NAME, label_name=LABEL_NAME):
+                      batch_size=4, input_name=INPUT_NAME, label_name=LABEL_NAME, cleaned_data=False):
         """Build the dataset"""
-        padded_sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name)
+        padded_sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name, cleaned_data)
         X_train, X_val, y_train, y_val = self.split_data(padded_sentences, labels, test_size)
-
+        print(X_train.shape)
         train_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_train, dtype=tf.int64),
                                                             tf.convert_to_tensor(y_train, dtype=tf.int64)))
         train_dataset = train_dataset.shuffle(buffer_size).batch(batch_size)
@@ -162,3 +166,12 @@ class Dataset:
                                                           tf.convert_to_tensor(y_val, dtype=tf.int64)))
         val_dataset = val_dataset.shuffle(buffer_size).batch(batch_size)
         return train_dataset, val_dataset
+
+if __name__ == "__main__":
+    data_path = '/home/whoisltd/Documents/Transformer-XL/data/clean/clean_data.csv'
+    data_clean = Dataset(data_path)
+    a , b = data_clean.build_dataset(cleaned_data=True)
+    # print(a)
+    for (batch, (inputs, labels)) in enumerate(a):
+        if batch == 0:
+            print(inputs.shape)
