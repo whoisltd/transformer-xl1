@@ -167,11 +167,11 @@ class Dataset:
         val_dataset = val_dataset.shuffle(buffer_size).batch(batch_size)
         return train_dataset, val_dataset
 
-if __name__ == "__main__":
-    data_path = '/home/whoisltd/Documents/Transformer-XL/data/clean/clean_data.csv'
-    data_clean = Dataset(data_path)
-    a , b = data_clean.build_dataset(cleaned_data=True)
-    # print(a)
-    for (batch, (inputs, labels)) in enumerate(a):
-        if batch == 0:
-            print(inputs.shape)
+# if __name__ == "__main__":
+#     data_path = '/home/whoisltd/Documents/Transformer-XL/data/clean/clean_data.csv'
+#     data_clean = Dataset(data_path)
+#     a , b = data_clean.build_dataset(cleaned_data=True)
+#     # print(a)
+#     for (batch, (inputs, labels)) in enumerate(a):
+#         if batch == 0:
+#             print(inputs.shape)

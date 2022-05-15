@@ -107,11 +107,6 @@ def train_step(inputs, labels, optimizer, inputs_mem):
         # print(labels.shape)
         logits, new_mems = model(inputs, inputs_mem, training=True)
         # print(logits.shape)
-        x = tf.keras.layers.GlobalAveragePooling1D()(logits)
-        x = tf.keras.layers.Dropout(0.1)(x, training=True)
-        x = tf.keras.layers.Dense(20, activation="relu")(x)
-        x = tf.keras.layers.Dropout(0.1)(x, training=True)
-        logits = tf.keras.layers.Dense(2, activation="softmax")(x)
         # loss = loss_function(labels1, logits)
         loss = train_loss(labels1, logits)
         

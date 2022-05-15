@@ -63,9 +63,18 @@ class TransformerXL(tf.keras.Model):
                                         inputs_mem=inputs_mem[i], 
                                         r=self.pos_embedding,
                                         training=training)
+
         x=self.dropout1(x, training=training)
+        
         x = tf.matmul(x, self.projection, transpose_b=True)
         x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
+
+        x = tf.keras.layers.GlobalAveragePooling1D()(x)
+        x = tf.keras.layers.Dropout(0.1)(x, training=True)
+        x = tf.keras.layers.Dense(20, activation="relu")(x)
+        x = tf.keras.layers.Dropout(0.1)(x, training=True)
+        x = tf.keras.layers.Dense(2)(x)
+
         return x, new_mems
 
 if __name__ == '__main__':
