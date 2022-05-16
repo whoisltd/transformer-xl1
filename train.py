@@ -18,10 +18,10 @@ if __name__ == "__main__":
     parser.add_argument("--d-model", default=128, type=int)
     parser.add_argument("--embedding-size", default=128, type=int)
     parser.add_argument("--n-layer", default=6, type=int)
-    parser.add_argument("--max-len", default=128, type=int)
+    parser.add_argument("--max-len", default=256, type=int)
     parser.add_argument("--vocab-size", default=10000, type=int)
     parser.add_argument("--buffer-size", default=128, type=int)
-    parser.add_argument("--batch-size", default=64, type=int)
+    parser.add_argument("--batch-size", default=32, type=int)
     parser.add_argument("--test-size", default=0.2, type=float)
     parser.add_argument("--data-path", default="/content/transformer-xl1/data/clean/clean_data.csv", type=str)
 
@@ -91,14 +91,14 @@ train_acc = tf.keras.metrics.CategoricalAccuracy()
 checkpoint = tf.train.Checkpoint(model=model, optimizer = optimizer)
 checkpoint_manager = tf.train.CheckpointManager(checkpoint, '/content', max_to_keep=3)
 
-# def loss_function(labels, logits):
-#     """
-#     Compute the loss function
-#     """
-#     loss = train_loss(
-#         labels, logits)
-#     # loss = tf.reduce_mean(loss)
-#     return loss
+def loss_function(labels, logits):
+    """
+    Compute the loss function
+    """
+    loss = tf.keras.losses.categorical_crossentropy(
+        labels, logits, from_logits=True)
+    loss = tf.reduce_mean(loss)
+    return loss
 
 def train_step(inputs, labels, optimizer, inputs_mem):
     with tf.GradientTape() as tape:
@@ -107,16 +107,16 @@ def train_step(inputs, labels, optimizer, inputs_mem):
         # print(labels.shape)
         logits, new_mems = model(inputs, inputs_mem, training=True)
         # print(logits.shape)
-        # loss = loss_function(labels1, logits)
-        loss = train_loss(labels1, logits)
+        loss = loss_function(labels1, logits)
+        # loss = train_loss(labels1, logits)
         
     #compute gradients
     gradients = tape.gradient(loss, model.trainable_variables)
 
     #update weights
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # train_loss.update_state(loss)
-    train_acc.update_state(labels, logits)
+    train_loss.update_state(loss)
+    train_acc.update_state(cal_acc(labels, logits))
 
     return new_mems, loss
     
@@ -130,7 +130,7 @@ def fit():
 
     for epoch in range(args.epochs):
         
-        for (epoch, (inputs, labels)) in enumerate(train_dataset):
+        for (batch, (inputs, labels)) in enumerate(train_dataset):
 
             mems, loss = train_step(inputs, labels, optimizer, mems)
 
@@ -145,7 +145,7 @@ def fit():
             print('saving checkpoint for epoch {} at {}'.format(
                     epoch+1, saved_path))
 
-        # train_loss.reset_states()
+        train_loss.reset_states()
         train_acc.reset_states()
         
     print('----------------Done--------------------')

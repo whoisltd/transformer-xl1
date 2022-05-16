@@ -24,17 +24,17 @@ class TransformerXL(tf.keras.Model):
         self.m_len = m_len
         self.n_layer = n_layer
         #word embedding
-        # self.embedding = Embedding(n_vocab, d_model)
-        self.embedding = tf.Variable(INITIALIZER((n_vocab, d_embed)), name='embedding')
-        # word embedding size to model size
-        self.projection = tf.Variable(INITIALIZER((d_embed, d_model)), name='projection')
+        self.embedding = Embedding(n_vocab, d_model)
+        # self.embedding = tf.Variable(INITIALIZER((n_vocab, d_embed)), name='embedding')
+        # # word embedding size to model size
+        # self.projection = tf.Variable(INITIALIZER((d_embed, d_model)), name='projection')
         
         self.dropout1 = Dropout(dropout_rate)
 
         #positional embedding
         k_len = q_len + m_len
         self.pos_embedding = position_embedding(d_model, k_len)
-        self.logit_bias = tf.Variable(tf.zeros((n_vocab,)), name='logit_bias')
+        # self.logit_bias = tf.Variable(tf.zeros((n_vocab,)), name='logit_bias')
 
         #transformer
         self.multihead_layers = [Transformer(d_model, d_ff, num_heads, dropout_rate) for _ in range(n_layer)]
@@ -50,9 +50,9 @@ class TransformerXL(tf.keras.Model):
     
     def call(self, inputs, inputs_mem=None, training = False):
         new_mems = []
-        x = tf.nn.embedding_lookup(self.embedding, inputs)
-        x = tf.matmul(x, self.projection)
-        # x = self.embedding(inputs)
+        # x = tf.nn.embedding_lookup(self.embedding, inputs)
+        # x = tf.matmul(x, self.projection)
+        x = self.embedding(inputs)
 
         if inputs_mem is None:
             inputs_mem = [None] * self.n_layer
@@ -66,8 +66,8 @@ class TransformerXL(tf.keras.Model):
 
         x=self.dropout1(x, training=training)
         
-        x = tf.matmul(x, self.projection, transpose_b=True)
-        x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
+        # x = tf.matmul(x, self.projection, transpose_b=True)
+        # x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
 
         x = tf.keras.layers.GlobalAveragePooling1D()(x)
         x = tf.keras.layers.Dropout(0.1)(x, training=True)
