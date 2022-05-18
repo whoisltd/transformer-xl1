@@ -50,8 +50,6 @@ class TransformerXL(tf.keras.Model):
     
     def call(self, inputs, inputs_mem=None, training = False):
         new_mems = []
-        # x = tf.nn.embedding_lookup(self.embedding, inputs)
-        # x = tf.matmul(x, self.projection)
         x = self.embedding(inputs)
 
         if inputs_mem is None:
@@ -65,17 +63,14 @@ class TransformerXL(tf.keras.Model):
                                         training=training)
 
         x=self.dropout1(x, training=training)
-        
-        # x = tf.matmul(x, self.projection, transpose_b=True)
-        # x = tf.matmul(x, self.embedding, transpose_b=True) + self.logit_bias
+        print(x.shape)
+        # x = tf.keras.layers.GlobalAveragePooling1D()(x)
+        # x = tf.keras.layers.Dropout(0.1)(x, training=True)
+        # x = tf.keras.layers.Dense(20, activation="relu")(x)
+        # x = tf.keras.layers.Dropout(0.1)(x, training=True)
+        logits = tf.keras.layers.Dense(2)(x)
 
-        x = tf.keras.layers.GlobalAveragePooling1D()(x)
-        x = tf.keras.layers.Dropout(0.1)(x, training=True)
-        x = tf.keras.layers.Dense(20, activation="relu")(x)
-        x = tf.keras.layers.Dropout(0.1)(x, training=True)
-        x = tf.keras.layers.Dense(2)(x)
-
-        return x, new_mems
+        return logits, new_mems
 
 if __name__ == '__main__':
     n_vocab = 1000
