@@ -147,8 +147,10 @@ class Dataset:
             # Save data after preprocessing
             self.save_clean_data(sentences, labels, input_name, label_name)
             self.save_labels(data[label_name])
+        sentences = ['[CLS] ' + sentence + ' [SEP]' for sentence in sentences]
+        print(sentences[:10])
         padded_sentences = self.tokenizer_data(sentences, vocab_size, max_length)
-        self.save_tokenizer(self.tokenizer_save)
+        # self.save_tokenizer(self.tokenizer_save) //uncomment to saved tokenizer
         print("Dataset loaded.")
         return padded_sentences, labels
 
@@ -157,7 +159,7 @@ class Dataset:
         """Build the dataset"""
         padded_sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name, cleaned_data)
         X_train, X_val, y_train, y_val = self.split_data(padded_sentences, labels, test_size)
-        print(X_train.shape)
+
         train_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_train, dtype=tf.int64),
                                                             tf.convert_to_tensor(y_train, dtype=tf.int64)))
         train_dataset = train_dataset.shuffle(buffer_size).batch(batch_size)
@@ -167,11 +169,11 @@ class Dataset:
         val_dataset = val_dataset.shuffle(buffer_size).batch(batch_size)
         return train_dataset, val_dataset
 
-# if __name__ == "__main__":
-#     data_path = '/home/whoisltd/Documents/Transformer-XL/data/clean/clean_data.csv'
-#     data_clean = Dataset(data_path)
-#     a , b = data_clean.build_dataset(cleaned_data=True)
-#     # print(a)
-#     for (batch, (inputs, labels)) in enumerate(a):
-#         if batch == 0:
-#             print(inputs.shape)
+if __name__ == "__main__":
+    data_path = '/home/whoisltd/Documents/Transformer-XL/data/clean/clean_data.csv'
+    data_clean = Dataset(data_path)
+    a , b = data_clean.build_dataset(cleaned_data=True)
+    # print(a)
+    for (batch, (inputs, labels)) in enumerate(a):
+        if batch == 0:
+            print(inputs.shape)
