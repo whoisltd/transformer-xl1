@@ -51,12 +51,12 @@ class Dataset:
         clean_text = re.compile(r'https?://\S+|www\.\S+')
         return clean_text.sub(r'', text)
 
-    def remove_punctuation(self, text):
-        """Remove punctuation from a text"""
-        exclude = string.punctuation
-        for char in exclude:
-            text = text.replace(char,'')
-        return text
+    # def remove_punctuation(self, text):
+    #     """Remove punctuation from a text"""
+    #     exclude = string.punctuation
+    #     for char in exclude:
+    #         text = text.replace(char,'')
+    #     return text
 
     def remove_emoji(self, text):
         """Remove emoji from a text"""
@@ -70,26 +70,28 @@ class Dataset:
                             "]+", flags=re.UNICODE)
         return emoji_pattern.sub(r'', text)
 
-    def remove_stopwords(self, text):
-        """Remove stopwords from a text"""
-        stop_words=set(stopwords.words('english'))
-        words = text.split()
-        list_words = []
-        for word in words:
-            if word not in stop_words:
-                list_words.append(word)
-        return ' '.join(list_words)
+    # def remove_stopwords(self, text):
+    #     """Remove stopwords from a text"""
+    #     stop_words=set(stopwords.words('english'))
+    #     words = text.split()
+    #     list_words = []
+    #     for word in words:
+    #         if word not in stop_words:
+    #             list_words.append(word)
+    #     return ' '.join(list_words)
 
-    #grouping together the different inflected forms of a word
-    def lemma_traincorpus(self, data):
-        """Lemmatize the training corpus"""
-        lemmatizer=WordNetLemmatizer()
-        sentence_words = word_tokenize(data)
-        out_data=[lemmatizer.lemmatize(word, pos='v') for word in sentence_words]
-        return ' '.join(out_data)
+    # #grouping together the different inflected forms of a word
+    # def lemma_traincorpus(self, data):
+    #     """Lemmatize the training corpus"""
+    #     lemmatizer=WordNetLemmatizer()
+    #     sentence_words = word_tokenize(data)
+    #     out_data=[lemmatizer.lemmatize(word, pos='v') for word in sentence_words]
+    #     return ' '.join(out_data)
 
     def tokenizer_data(self, sentences, vocab_size, max_length):
         """Tokenize and pad sentences"""
+        # tokenizer data for text classification
+        
         tokenizer = Tokenizer(num_words = vocab_size, oov_token=OOV)
         tokenizer.fit_on_texts(sentences)
         self.tokenizer_save = tokenizer
@@ -128,9 +130,9 @@ class Dataset:
             texts[i] = self.remove_html_tags(texts[i])
             texts[i] = self.remove_url(texts[i])
             texts[i] = self.remove_emoji(texts[i])
-            texts[i] = self.remove_punctuation(texts[i])
-            texts[i] = self.remove_stopwords(texts[i])
-            texts[i] = self.lemma_traincorpus(texts[i])
+            # texts[i] = self.remove_punctuation(texts[i])
+            # texts[i] = self.remove_stopwords(texts[i])
+            # texts[i] = self.lemma_traincorpus(texts[i])
         return np.array(texts)
 
     def load_dataset(self, max_length, vocab_size, input_name, label_name, cleaned_data):
@@ -147,18 +149,27 @@ class Dataset:
             # Save data after preprocessing
             self.save_clean_data(sentences, labels, input_name, label_name)
             self.save_labels(data[label_name])
-        sentences = ['[CLS] ' + sentence + ' [SEP]' for sentence in sentences]
-        print(sentences[:10])
+        #cls sentences
+        sentences = ['<CLS> ' + sentence + ' <SEP>' for sentence in sentences]
+        
         padded_sentences = self.tokenizer_data(sentences, vocab_size, max_length)
+        # print(sentences[:10])
+
+        attention_masks = []
+        # Create a mask of 1s for each token followed by 0s for padding
+        for seq in padded_sentences:
+            seq_mask = [float(i>0) for i in seq]
+            attention_masks.append(seq_mask)
         # self.save_tokenizer(self.tokenizer_save) //uncomment to saved tokenizer
         print("Dataset loaded.")
-        return padded_sentences, labels
+        return padded_sentences, labels, attention_masks
 
     def build_dataset(self, max_length=MAX_LENGTH, vocab_size=VOCAB_SIZE, test_size=TEST_SIZE, buffer_size=128,
                       batch_size=4, input_name=INPUT_NAME, label_name=LABEL_NAME, cleaned_data=False):
         """Build the dataset"""
-        padded_sentences, labels = self.load_dataset(max_length, vocab_size, input_name, label_name, cleaned_data)
+        padded_sentences, labels, attention_masks = self.load_dataset(max_length, vocab_size, input_name, label_name, cleaned_data)
         X_train, X_val, y_train, y_val = self.split_data(padded_sentences, labels, test_size)
+        # train_masks, val_masks, _, _ = self.split_data(attention_masks, padded_sentences)
 
         train_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_train, dtype=tf.int64),
                                                             tf.convert_to_tensor(y_train, dtype=tf.int64)))
@@ -167,13 +178,15 @@ class Dataset:
         val_dataset = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(X_val, dtype=tf.int64),
                                                           tf.convert_to_tensor(y_val, dtype=tf.int64)))
         val_dataset = val_dataset.shuffle(buffer_size).batch(batch_size)
+
+        # mask_set = tf.data.Dataset.from_tensor_slices((tf.convert_to_tensor(train_masks, dtype=tf.int64),
+        #                                                tf.convert_to_tensor(val_masks, dtype=tf.int64)))
+        # mask_set = mask_set.shuffle(buffer_size).batch(batch_size)
         return train_dataset, val_dataset
+        # return train_dataset, val_dataset, mask_set
 
 if __name__ == "__main__":
-    data_path = '/home/whoisltd/Documents/Transformer-XL/data/clean/clean_data.csv'
+    data_path = '/home/whoisltd/transformer-xl1/data/raw/IMDB_Dataset.csv'
     data_clean = Dataset(data_path)
-    a , b = data_clean.build_dataset(cleaned_data=True)
-    # print(a)
-    for (batch, (inputs, labels)) in enumerate(a):
-        if batch == 0:
-            print(inputs.shape)
+    a , b = data_clean.build_dataset(cleaned_data=False)
+
