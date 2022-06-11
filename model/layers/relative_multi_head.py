@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.python.keras.layers import Dropout, Dense
+from tensorflow.keras.layers import Dropout, Dense
 from model.layers.rel_shift import *
 from model.layers.generate_mask import *
 

@@ -3,6 +3,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LayerNormalization
 from tensorflow.keras.layers import Embedding
+from tensorflow.keras.layers import Sequential
 from model.layers.positional_embedding import *
 from model.layers.transformer import *
 
@@ -63,12 +64,18 @@ class TransformerXL(tf.keras.Model):
                                         training=training)
 
         x=self.dropout1(x, training=training)
-        print(x.shape)
+        x = x[:, 0]
+        seq = Sequential([
+            Dense(self.d_model, activation='gelu'),
+            Dropout(0.1),
+            Dense(2)])
+        logits = seq(x)
+
         # x = tf.keras.layers.GlobalAveragePooling1D()(x)
         # x = tf.keras.layers.Dropout(0.1)(x, training=True)
         # x = tf.keras.layers.Dense(20, activation="relu")(x)
         # x = tf.keras.layers.Dropout(0.1)(x, training=True)
-        logits = tf.keras.layers.Dense(2)(x)
+        # logits = tf.keras.layers.Dense(2)(x)
 
         return logits, new_mems
 
